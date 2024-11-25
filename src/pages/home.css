@@ -1,0 +1,33 @@
+.home-container{
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+
+.home-box{
+    width: 35vw;
+    height: 60vh;
+    background-color: var(--box-color);
+    border-radius: 10px;
+    box-shadow: 8px 8px 8px 5px rgba(0, 0, 0, 0.205);
+}
+
+.home-header{
+    margin-bottom: 5vh;
+}
+
+.dropdown-menu select{
+    display: inline-block;
+    position: relative;
+    width: 15vw;
+    height: 5vh;
+    border-radius: 10px;
+    margin-bottom: 3vh;
+    margin-top: 2vh;
+    border: none;
+    box-shadow: 5px 5px 5px 0px rgb(9, 54, 59);
+}

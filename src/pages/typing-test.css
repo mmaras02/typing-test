@@ -1,0 +1,32 @@
+.test-container{
+    width: 100%;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 8vw auto 8vw;
+    grid-template-rows: 10vh auto 10vh;
+}
+
+.text-box{
+    grid-column: 2/3;
+    grid-row: 2/3;
+    margin-left:0 ;
+    width: 100%;
+    align-self: center;
+    font-size: 2.5rem;
+    text-align: left;
+    font-family: 'Azeret Mono', monospace; 
+}
+
+.words{
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+}
+
+.word{
+    /*display: inline;*/
+    margin-right: 20px;
+    color: var(--text-color);
+    display: flex;
+}
