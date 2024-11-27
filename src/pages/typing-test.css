@@ -6,15 +6,19 @@
     grid-template-rows: 10vh auto 10vh;
 }
 
-.text-box{
+.text-box, .hidden-input{
     grid-column: 2/3;
     grid-row: 2/3;
     margin-left:0 ;
     width: 100%;
+    max-width: 100%;
     align-self: center;
     font-size: 2.5rem;
     text-align: left;
     font-family: 'Azeret Mono', monospace; 
+
+    display: block;
+    position: relative;
 }
 
 .words{
@@ -22,11 +26,59 @@
     display: flex;
     flex-wrap: wrap;
     gap: 18px;
+    padding-top: 7px;
 }
 
 .word{
     /*display: inline;*/
-    margin-right: 20px;
+    margin-right: 8px;
     color: var(--text-color);
+    display: inline-flex;
+}
+/*.hidden-input{
+    opacity:0;
+}*/
+
+.hidden-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: transparent;
+    color: transparent;
+    border: none;
+    caret-color: purple;
+    word-wrap: break-word;
+    gap: 18px;
+    padding: 0;
+    margin: 0;
+    white-space: normal;
+
     display: flex;
+    flex-wrap: wrap;
+
+    resize: none;
+    line-height: 1.6;
+    overflow: hidden;
+
+}
+
+.hidden-input:focus {
+    outline: none;
+}
+
+.char.active{
+    border-bottom: 1px violet;
+}
+
+.char{
+    color: var(--text-color);
+}
+
+.char.correct{
+    color: rgb(209, 209, 209);
+}
+
+.char.wrong{
+    color: red;
 }
