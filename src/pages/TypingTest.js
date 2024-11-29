@@ -15,10 +15,12 @@ const TypingTest = () => {
     const [isCharCorrect, setIsCharCorrect] = useState(null);
 
     const [correctWrongChar, setCorrectWrongChar] = useState([]);
-    const [correctChar, setCorrecChar] = useState([]);
-    const [incorrectChar, setIncorrectChar] = useState([]);
+    const [correctChars, setCorrecChars] = useState(0);
+    const [correctWords, setCorrectWords] = useState(0);
+    const [incorrectChar, setIncorrectChar] = useState(0);
     
     const inputRef = useRef(null);
+    const wordRefs = useRef([]);
     const charRefs = useRef([]);
 
     const focusInput = () => {
@@ -27,7 +29,6 @@ const TypingTest = () => {
 
     useEffect(() => {
         const words = generate(20);
-        console.log("words", words);
         setText(words);
         setCorrectWrongChar(words.map(word => Array(word.length).fill(null)));
         setLoading(false);
@@ -55,27 +56,40 @@ const TypingTest = () => {
         const currentChar = currentWord[currentCharIndex];
 
         if(input.endsWith(" ")){
-            console.log("activeWord.length", currentWord.length);
-            console.log("iinput length", typedWord.length);
+            setCurrentWordIndex((prevIndex) => prevIndex + 1);
+            setCurrentCharIndex(0);
 
-            if(currentWord.length >= typedWord.length){
-                setCurrentWordIndex((prevIndex) => prevIndex + 1); //iddemo na iducu rijec
-                setCurrentCharIndex(0); //u novoj rijeci prvo slovo je 0
-                return;
-            }else{
-                //setCurrentCharIndex((prevIndex) => prevIndex + 1);
-                updateCharStatus(currentWordIndex, currentCharIndex, "incorrect");
+            if(typedWord === currentWord){
+                setCorrectWords(prev => prev + 1);
             }
-            
+            return;
         }
         if(input[input.length - 1] === currentChar){
             setCurrentCharIndex((prevIndex) => prevIndex + 1);
             updateCharStatus(currentWordIndex, currentCharIndex, "correct");
+            setCorrecChars(prev => prev + 1);
         }else{
             setCurrentCharIndex((prevIndex) => prevIndex + 1);
             updateCharStatus(currentWordIndex, currentCharIndex, "incorrect");
         }
-        console.log("corect wrong char", correctWrongChar);
+
+        //handle backspace
+    }
+
+    const calculateAccuracy = () => {
+        const totalWordsTyped = userInput.split(" ").length;
+        const passedTime = 30 / 60;
+
+        const nwpm = correctWords / passedTime;
+        const gwpm = totalWordsTyped / passedTime;
+        return Math.round((nwpm*100) / gwpm);
+    }
+
+    const calculateSpeed = () => {
+        const allTypedChar = userInput.length;
+        console.log("all typed ", allTypedChar);
+        const passedTime = 30 / 60;
+        return Math.round((allTypedChar/5)/passedTime);
     }
 
     return ( 
