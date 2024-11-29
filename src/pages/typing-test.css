@@ -47,7 +47,7 @@
     background-color: transparent;
     color: transparent;
     border: none;
-    caret-color: purple;
+    caret-color: var(--active-text);
     word-wrap: break-word;
     gap: 18px;
     padding: 0;
@@ -68,7 +68,7 @@
 }
 
 .char.active{
-    border-bottom: 1px violet;
+    border-bottom: 1px var(--active-text);
 }
 
 .char{
@@ -76,9 +76,9 @@
 }
 
 .char.correct{
-    color: rgb(209, 209, 209);
+    color: var(--active-text);
 }
 
-.char.wrong{
-    color: red;
+.char.incorrect{
+    color: var(--mistake-color);
 }
