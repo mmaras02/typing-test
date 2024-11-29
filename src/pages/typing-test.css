@@ -6,7 +6,7 @@
     grid-template-rows: 10vh auto 10vh;
 }
 
-.text-box, .hidden-input{
+.text-box{
     grid-column: 2/3;
     grid-row: 2/3;
     margin-left:0 ;

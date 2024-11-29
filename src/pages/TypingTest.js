@@ -14,7 +14,7 @@ const TypingTest = () => {
     const [currentCharIndex, setCurrentCharIndex] = useState(0);
     const [isCharCorrect, setIsCharCorrect] = useState(null);
 
-    const [correctWrongChar, setCorrectWrongChar] = useState([]);
+    const [correctWrongChars, setCorrectWrongChars] = useState([]);
     const [correctChars, setCorrecChars] = useState(0);
     const [correctWords, setCorrectWords] = useState(0);
     const [incorrectChar, setIncorrectChar] = useState(0);
@@ -30,13 +30,14 @@ const TypingTest = () => {
     useEffect(() => {
         const words = generate(20);
         setText(words);
-        setCorrectWrongChar(words.map(word => Array(word.length).fill(null)));
+        setCorrectWrongChars(words.map(word => Array(word.length).fill(null)));
         setLoading(false);
         focusInput();
     },[])
 
+
     const updateCharStatus = (wordIndex, charIndex, status) => {
-        setCorrectWrongChar((prev) => {
+        setCorrectWrongChars((prev) => {
           const newCorrectWrongChar = [...prev];
           newCorrectWrongChar[wordIndex] = [...newCorrectWrongChar[wordIndex]];
           newCorrectWrongChar[wordIndex][charIndex] = status;
@@ -44,41 +45,46 @@ const TypingTest = () => {
         });
     };
 
-    const handleUserInput = (e) => {
-
-        const input = e.target.value;
-        setUserInput(input);
-        console.log("input", input);
-        const typedWord = input.split(" ")[currentWordIndex] || "";
-        console.log("typed word", typedWord);
-
+    const onKeyDown = (e) => {
         const currentWord = text[currentWordIndex];
         const currentChar = currentWord[currentCharIndex];
 
-        if(input.endsWith(" ")){
+        //space handling
+        if(e.key === " " || e.key === "Enter"){
+            console.log("user input", userInput.trim());
+            if(userInput.trim() === currentWord){
+                setCorrectWords(prev => prev + 1);
+            }
             setCurrentWordIndex((prevIndex) => prevIndex + 1);
             setCurrentCharIndex(0);
+            setUserInput("");
+            return;
+        }
 
-            if(typedWord === currentWord){
-                setCorrectWords(prev => prev + 1);
+        //backspace hendling
+        if(e.key === "Backspace"){
+            if(currentCharIndex > 0){
+                setCurrentCharIndex(prevIndex => prevIndex - 1); //vracamo se jedan unazad i tog unazad updateamo status
+                updateCharStatus(currentWordIndex, currentCharIndex - 1, null);
+                setUserInput(prev => prev.slice(0, -1));
             }
             return;
         }
-        if(input[input.length - 1] === currentChar){
-            setCurrentCharIndex((prevIndex) => prevIndex + 1);
+
+        //normal situations
+        if(e.key === currentChar){
             updateCharStatus(currentWordIndex, currentCharIndex, "correct");
             setCorrecChars(prev => prev + 1);
-        }else{
-            setCurrentCharIndex((prevIndex) => prevIndex + 1);
+        }
+        else{
             updateCharStatus(currentWordIndex, currentCharIndex, "incorrect");
         }
-
-        //handle backspace
+        setCurrentCharIndex((prevIndex) => prevIndex + 1);
     }
 
     const calculateAccuracy = () => {
         const totalWordsTyped = userInput.split(" ").length;
-        const passedTime = 30 / 60;
+        const passedTime = testDuration / 60;
 
         const nwpm = correctWords / passedTime;
         const gwpm = totalWordsTyped / passedTime;
@@ -88,8 +94,8 @@ const TypingTest = () => {
     const calculateSpeed = () => {
         const allTypedChar = userInput.length;
         console.log("all typed ", allTypedChar);
-        const passedTime = 30 / 60;
-        return Math.round((allTypedChar/5)/passedTime);
+        const passedTime = testDuration / 60;
+        return Math.round((allTypedChar / 5) / passedTime);
     }
 
     return ( 
@@ -108,7 +114,7 @@ const TypingTest = () => {
                             <div className="word" key={wordIndex}>
                                 {word.split('').map((char, charIndex) => (
                                     
-                                    <span key={`${wordIndex}-${charIndex}`} className={`char ${wordIndex === currentWordIndex && charIndex === currentCharIndex ? "active" : ""} ${correctWrongChar[wordIndex][charIndex]}`}>{char}</span>
+                                    <span key={`${wordIndex}-${charIndex}`} className={`char ${wordIndex === currentWordIndex && charIndex === currentCharIndex ? "active" : ""} ${correctWrongChars[wordIndex][charIndex]}`}>{char}</span>
                                 ))}
                         </div>
                     ))}
@@ -117,10 +123,10 @@ const TypingTest = () => {
                 <textarea type="text"
                           className="hidden-input"
                           ref={inputRef} 
-                          onChange={handleUserInput}
                           value={userInput}
-                          autoFocus
-                          spellcheck="false"/>
+                          onChange={(e) => setUserInput(e.target.value)}
+                          onKeyDown={onKeyDown}
+                          autoFocus/>
             </div>
         </div>
         </>
