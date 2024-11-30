@@ -13,6 +13,8 @@ body, html {
   --box-color:rgba(0, 0, 0, 0.336);
   --mistake-color: rgb(191, 77, 87);
   --active-text:rgb(206, 208, 197);
+  --active-color:rgb(111, 59, 231);
+
 
   background-color: var(--background-color);
 
@@ -23,7 +25,7 @@ code {
     monospace;
 }
 
-p, h1, h3, h4{
+p, h1, h2, h3, h4, .option-button{
   color: var(--text-color);
   margin: 0;
 }
