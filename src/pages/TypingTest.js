@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router";
 import "./typing-test.css";
-import { generate, count } from "random-words";
+import { generate } from "random-words";
+import TopMenu from "../components/TopMenu";
+import { useTestMode } from "../context/TestModeContext";
+import ResultData from "../components/ResultData";
 
 
 const TypingTest = () => {
-    const location = useLocation();
-    const {testDuration, testDifficulty} = location.state;
+
+    const {testMode, testWords, testSeconds, setTestSeconds} = useTestMode();
+
     const [text, setText] = useState("");
     const [loading, setLoading] = useState(true);
     const [userInput, setUserInput] = useState("");
@@ -14,27 +17,27 @@ const TypingTest = () => {
     const [currentCharIndex, setCurrentCharIndex] = useState(0);
 
     const [correctWrongChars, setCorrectWrongChars] = useState([]);
-    const [correctChars, setCorrecChars] = useState(0);
+    const [correctChars, setCorrectChars] = useState(0);
     const [correctWords, setCorrectWords] = useState(0);
     const [incorrectChar, setIncorrectChar] = useState(0);
-    const passedTime = testDuration / 60;
+    const [isFinished, setIsFinished] = useState(false);
+    const [testStarted, setTestStarted] = useState(false);
+
+    const [initialTime,setInitialTime] = useState(null);
 
     const inputRef = useRef(null);
-    //const wordRefs = useRef([]);
-    //const charRefs = useRef([]);
 
     const focusInput = () => {
         inputRef?.current.focus();
       };
 
     useEffect(() => {
-        const words = generate(20);
+        const words = generate(testWords);
         setText(words);
         setCorrectWrongChars(words.map(word => Array(word.length).fill(null)));
         setLoading(false);
         focusInput();
-    },[])
-
+    },[testWords]);
 
     const updateCharStatus = (wordIndex, charIndex, status) => {
         setCorrectWrongChars((prev) => {
@@ -45,12 +48,35 @@ const TypingTest = () => {
         });
     };
 
+    useEffect(() => {
+        let timer;
+        if (testMode === 'time' && testStarted &&  testSeconds > 0) {
+            timer = setInterval(() => {
+                setTestSeconds((prev) => prev - 1);
+            }, 1000);
+        } else if (testMode==='time' && testSeconds === 0) {
+            setIsFinished(true);
+            setTestStarted(false);
+        }
+    
+        return () => clearInterval(timer);
+    }, [testStarted, testSeconds],testMode);
+
     const onKeyDown = (e) => {
+        if(!testStarted){
+            setTestStarted(true);
+            setInitialTime(testMode === 'words' ? Date.now() : testSeconds);
+        }
+
         const currentWord = text[currentWordIndex];
         const currentChar = currentWord[currentCharIndex];
 
         //space handling
         if(e.key === " " || e.key === "Enter"){
+
+            if(currentWordIndex + 1 === testWords)
+                setIsFinished(true);
+
             if(userInput.trim() === currentWord){
                 setCorrectWords(prev => prev + 1);
             }
@@ -79,7 +105,7 @@ const TypingTest = () => {
             return;
         }
     
-        // Handling extra letters
+        // handling extra letters
         if (currentCharIndex >= currentWord.length) {
             
             setText((prev) => {
@@ -97,7 +123,7 @@ const TypingTest = () => {
         //normal situations
         if(e.key === currentChar){
             updateCharStatus(currentWordIndex, currentCharIndex, "correct");
-            setCorrecChars(prev => prev + 1);
+            setCorrectChars(prev => prev + 1);
         }
         else{
             updateCharStatus(currentWordIndex, currentCharIndex, "incorrect");
@@ -106,91 +132,70 @@ const TypingTest = () => {
     }
 
     const calculateAccuracy = () => {
-        const totalWordsTyped = userInput.split(" ").length;
+        return Math.round((correctWords / currentWordIndex) * 100);
+      };
 
-        const nwpm = correctWords / passedTime;
-        const gwpm = totalWordsTyped / passedTime;
-        return Math.round((nwpm*100) / gwpm);
-    }
+    const calculateWPM = () => {
+        if (!initialTime) return 0;
 
-    const calculateSpeed = () => {
-        const allTypedChar = userInput.length;
-        console.log("all typed ", allTypedChar);
-        return Math.round((allTypedChar / 5) / passedTime);
-    }
+        const elapsedTimeInSeconds = testMode === 'time'
+            ? (testSeconds === 0 ? initialTime : initialTime - testSeconds)
+            : (Date.now() - initialTime) / 1000;
+
+        if (elapsedTimeInSeconds === 0) return 0;
+
+        const multiplier = 60 / elapsedTimeInSeconds; // Factor to convert seconds to minutes
+        return testMode === 'time'
+            ? Math.round((correctChars / 5) * multiplier) // Time mode: use characters
+            : Math.round(correctWords * multiplier); 
+
+            /*const wordsTyped = correctWords;
+            const minutes = (Date.now() - initialTime) / 60000;
+            return Math.round(wordsTyped / minutes);*/
+    };
+    
 
     return ( 
         <>
-        
-        <div className="test-container">
             
             <div className="center-box">
-                <div className="top-menu">
-                    <h2>{currentWordIndex} / 20</h2>
-                    <div className="mode-menu">
-                        <h4>Mode |</h4>
-                        <button className="option-button">Time</button>
-                        <button className="option-button active">Words</button>
-                    </div>
-                    <div className="options-menu">
-                        <button className="option-button active">20</button>
-                        <button className="option-button">30</button>
-                        <button className="option-button">50</button>
-                    </div>
-                </div>
+                {isFinished ? (
+                    <ResultData wpm={calculateWPM()}
+                                accuracy={calculateAccuracy()}
+                                />
+                ) : (
+                    <>
+                    <TopMenu currentWordIndex={currentWordIndex} countDown={testSeconds} />
 
-                <div className="text-box" onClick={focusInput}>
-                    {loading ? (
-                        <p>Loading story...</p>
-                    ) : (
-                        <div className="words">
-                            {text.map((word, wordIndex) => (
-                                <div className="word" key={wordIndex}>
-                                    {word.split('').map((char, charIndex) => (
-                                        
-                                        <span key={`${wordIndex}-${charIndex}`} className={`char ${wordIndex === currentWordIndex && charIndex === currentCharIndex ? "active" : ""} ${correctWrongChars[wordIndex][charIndex]}`}>{char}</span>
-                                    ))}
+                    <div className="text-box" onClick={focusInput}>
+                        {loading ? (
+                            <p>Loading story...</p>
+                        ) : (
+                            <div className="words">
+                                {text.map((word, wordIndex) => (
+                                    <div className="word" key={wordIndex}>
+                                        {word.split('').map((char, charIndex) => (
+                                            
+                                            <span key={`${wordIndex}-${charIndex}`} className={`char ${wordIndex === currentWordIndex && charIndex === currentCharIndex ? "active" : ""} ${correctWrongChars[wordIndex][charIndex]}`}>{char}</span>
+                                        ))}
+                                </div>
+                            ))}
                             </div>
-                        ))}
-                        </div>
-                    )}
-                    <textarea type="text"
-                            className="hidden-input"
-                            ref={inputRef} 
-                            value={userInput}
-                            onChange={(e) => setUserInput(e.target.value)}
-                            onKeyDown={onKeyDown}
-                            autoFocus/>
-                </div>
+                        )}
+                        <textarea type="text"
+                                className="hidden-input"
+                                ref={inputRef} 
+                                value={userInput}
+                                onChange={(e) => setUserInput(e.target.value)}
+                                onKeyDown={onKeyDown}
+                                autoFocus/>
+                    </div>
+                    </>
+                )}
+                
             </div>
-        </div>
         </>
      );
 
 }
 export default TypingTest;
-
-//moran vidit je li rijec aktivna ili ne
-//rijec koja je aktivna provjerit svako slovo s user input
-
-//mapirat kroz svaku rijec i onda kroz svako slovo pa provjeravat 
-
-//https://fonts.googleapis.com/css2?family=Azeret+Mono&display=swap
-
-//<p className={`char ${index === currentCharIndex && isCharCorrect ? 'correct' : 'mistake'}`}>{char}</p>
-
-
-//moran nap prvo slovo --> current 
-//ako je tocan char pridjelim mu class name 
-//situacije:
-//backspace--> delete letter prebious letter is currrent
-//space--> if input equals active word --> move to he next word 
-//         if user types space in incorrect place display as wrong and continue normally 
-//extra letters --> keep track of letters and num of spaces and words and depending on which char i am count which word it is and whictch char
-
-//ovisno koliko je vrimena rijeci se pojavljuju 
-//moran pratit koliko mistakes
-
-//https://fonts.googleapis.com/css2?family=Azeret+Mono&display=swap
-
-//<p className={`char ${index === currentCharIndex && isCharCorrect ? 'correct' : 'mistake'}`}>{char}</p>

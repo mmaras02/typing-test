@@ -2,19 +2,37 @@
     width: 100%;
     height: 100vh;
     display: grid;
-    grid-template-columns: 8vw auto 8vw;
+    grid-template-columns: 10vw auto 10vw;
     grid-template-rows: 10vh auto 10vh;
     gap: 10px;
 }
+
+.header{
+    grid-column: 2/3;
+    grid-row: 1/2;
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.header h2{
+    color: var(--active-text);
+    margin-left: 1vw;
+    font-family: 'Azeret Mono', monospace; 
+}
+
 .center-box{
     grid-column: 2/3;
     grid-row: 2/3;
     width: 100%;
     max-width: 100%;
     height: 100%;
-    display: flex;
+    /*display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: center;*/
+    display: grid;
+    grid-template-rows:15vh 10vh auto;
+    gap: 10px;
 }
 
 .top-menu{
@@ -22,18 +40,27 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 4vh;
+    height: 8vh;
+    grid-row: 2/3;
 }
 
-.top-menu h2{
+.counter{
+    width: 10vw;
+    display: flex;
+}
+
+.counter p{
     color: var(--active-color);
+    font-size: 1.5rem;
+    font-weight: 600;
 }
 
-.mode-menu{
+.modes-menu{
     display: flex;
     font-size: 1.2rem;
 }
 
-.mode-menu h4{
+.modes-menu h4{
     margin-right: 10px;
     color: var(--active-color);
 }
@@ -54,13 +81,16 @@
 }
 
 .text-box{
-    font-size: 2.2rem;
+    grid-row: 3/4;
+    height: 30vh;
+    font-size: 2rem;
     text-align: left;
     font-family: 'Azeret Mono', monospace; 
 
     display: block;
     position: relative;
 }
+
 
 .words{
     width: 100%;
@@ -106,4 +136,40 @@
 
 .char.incorrect{
     color: var(--mistake-color);
+}
+
+
+.results-content{
+    height: 100%;
+    display: grid;
+    grid-template-columns: 10vw auto;
+    gap: 10px;
+    align-items: center;
+    margin-top: 15vh;
+}
+
+.stats{
+    display: grid;
+    gap: 1.5rem;
+    grid-template-areas:
+        "wpm" 
+        "acc";
+    font-size: 36px;
+    align-items: center;
+}
+
+.wpm{
+    grid-area: wpm;
+    display: flex;
+    flex-direction: column;
+}
+
+.acc{
+    grid-area: acc;
+    display: flex;
+    flex-direction: column;
+}
+
+.data{
+    color: var(--active-color);
 }

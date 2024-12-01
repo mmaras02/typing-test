@@ -9,7 +9,6 @@ function App() {
     <div className="App">
       <Routes>
         <Route exact path="/" element = {<HomePage />}></Route>
-        <Route exact path="/typing-test" element = {<TypingTest />}></Route>
       </Routes>
     </div>
     </BrowserRouter>
