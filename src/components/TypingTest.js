@@ -1,29 +1,29 @@
 import { useEffect, useRef, useState } from "react";
-import "./typing-test.css";
+import "../styles/global.css";
 import { generate } from "random-words";
-import TopMenu from "../components/TopMenu";
+import TopMenu from "./TopMenu";
 import { useTestMode } from "../context/TestModeContext";
-import ResultData from "../components/ResultData";
+import Stats from "./Stats";
 
 
 const TypingTest = () => {
-
+    
     const {testMode, testWords, testSeconds, setTestSeconds} = useTestMode();
-
     const [text, setText] = useState("");
     const [loading, setLoading] = useState(true);
     const [userInput, setUserInput] = useState("");
     const [currentWordIndex, setCurrentWordIndex] = useState(0);
     const [currentCharIndex, setCurrentCharIndex] = useState(0);
-
     const [correctWrongChars, setCorrectWrongChars] = useState([]);
     const [correctChars, setCorrectChars] = useState(0);
     const [correctWords, setCorrectWords] = useState(0);
-    const [incorrectChar, setIncorrectChar] = useState(0);
+    const [incorrectChars, setIncorrectChars] = useState(0);
+    const [missedChars, setMissedChars] = useState(0);
+    const [extraChars, setExtraChars] = useState(0);
     const [isFinished, setIsFinished] = useState(false);
     const [testStarted, setTestStarted] = useState(false);
-
     const [initialTime,setInitialTime] = useState(null);
+    const [performanceData, setPerformanceData] = useState([]);
 
     const inputRef = useRef(null);
 
@@ -53,6 +53,7 @@ const TypingTest = () => {
         if (testMode === 'time' && testStarted &&  testSeconds > 0) {
             timer = setInterval(() => {
                 setTestSeconds((prev) => prev - 1);
+                //updatePerformanceData();
             }, 1000);
         } else if (testMode==='time' && testSeconds === 0) {
             setIsFinished(true);
@@ -61,6 +62,7 @@ const TypingTest = () => {
     
         return () => clearInterval(timer);
     }, [testStarted, testSeconds],testMode);
+
 
     const onKeyDown = (e) => {
         if(!testStarted){
@@ -83,6 +85,8 @@ const TypingTest = () => {
             setCurrentWordIndex((prevIndex) => prevIndex + 1);
             setCurrentCharIndex(0);
             setUserInput("");
+
+            updatePerformanceData();
             return;
         }
 
@@ -98,6 +102,7 @@ const TypingTest = () => {
                         newText[currentWordIndex] = newText[currentWordIndex].slice(0, -1);
                         return newText;
                     });
+                    setExtraChars(prev => prev - 1);
                 }else{
                     updateCharStatus(currentWordIndex, currentCharIndex - 1, null);
                 }
@@ -114,8 +119,9 @@ const TypingTest = () => {
                 return newText;
             });
             updateCharStatus(currentWordIndex, currentCharIndex, "incorrect extra");
-            setUserInput((prev) => prev + e.key); 
-            setIncorrectChar((prev) => prev + 1); 
+            setUserInput((prev) => prev + e.key);
+            setExtraChars(prev => prev + 1); 
+            //setIncorrectChars((prev) => prev + 1);
             setCurrentCharIndex((prevIndex) => prevIndex + 1);
             return;
         }
@@ -127,41 +133,48 @@ const TypingTest = () => {
         }
         else{
             updateCharStatus(currentWordIndex, currentCharIndex, "incorrect");
+            setIncorrectChars(prev => prev + 1);
         }
         setCurrentCharIndex((prevIndex) => prevIndex + 1);
     }
+
+    const updatePerformanceData = () => {
+        const elapsedTimeInSeconds = testMode === 'time'
+            ? ( initialTime - testSeconds)
+            : (Date.now() - initialTime) / 1000;
+        
+        setPerformanceData(prev => [
+            ...prev, {time: elapsedTimeInSeconds, wpm: calculateWPM(), accuracy: calculateAccuracy()},
+        ]);
+    };
 
     const calculateAccuracy = () => {
         return Math.round((correctWords / currentWordIndex) * 100);
       };
 
     const calculateWPM = () => {
-        if (!initialTime) return 0;
-
         const elapsedTimeInSeconds = testMode === 'time'
-            ? (testSeconds === 0 ? initialTime : initialTime - testSeconds)
+            ? ( initialTime - testSeconds)
             : (Date.now() - initialTime) / 1000;
 
-        if (elapsedTimeInSeconds === 0) return 0;
-
-        const multiplier = 60 / elapsedTimeInSeconds; // Factor to convert seconds to minutes
+        const time = 60 / elapsedTimeInSeconds;
         return testMode === 'time'
-            ? Math.round((correctChars / 5) * multiplier) // Time mode: use characters
-            : Math.round(correctWords * multiplier); 
-
-            /*const wordsTyped = correctWords;
-            const minutes = (Date.now() - initialTime) / 60000;
-            return Math.round(wordsTyped / minutes);*/
+            ? Math.round((correctChars / 5) * time)
+            : Math.round(correctWords * time);
     };
-    
 
     return ( 
         <>
             
             <div className="center-box">
                 {isFinished ? (
-                    <ResultData wpm={calculateWPM()}
+                    <Stats wpm={calculateWPM()}
                                 accuracy={calculateAccuracy()}
+                                performanceData={performanceData}
+                                correctChars={correctChars}
+                                incorrectChars={incorrectChars}
+                                missedChars={missedChars}
+                                extraChars={extraChars}
                                 />
                 ) : (
                     <>

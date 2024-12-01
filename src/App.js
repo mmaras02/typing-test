@@ -1,6 +1,5 @@
 import './App.css';
 import HomePage from './pages/HomePage';
-import TypingTest from './pages/TypingTest';
 import { BrowserRouter,Routes,Route } from "react-router-dom";
 
 function App() {

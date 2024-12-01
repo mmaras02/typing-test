@@ -78,6 +78,7 @@
 
 .option-button.active{
     color: var(--active-color);
+    font-weight: 600;
 }
 
 .text-box{
@@ -89,6 +90,11 @@
 
     display: block;
     position: relative;
+
+    /*margin-left: unset;
+    overflow: hidden;*/
+    transition: 0.25s;
+
 }
 
 
@@ -143,9 +149,10 @@
     height: 100%;
     display: grid;
     grid-template-columns: 10vw auto;
-    gap: 10px;
+    grid-template-rows:auto 20vh;
+    gap: 30px;
     align-items: center;
-    margin-top: 15vh;
+    height: 564px;
 }
 
 .stats{
@@ -155,21 +162,43 @@
         "wpm" 
         "acc";
     font-size: 36px;
-    align-items: center;
+    display: flex;
+    flex-direction: column;
+    left: 0;
+}
+
+.stats p{
+    left: 0;
 }
 
 .wpm{
     grid-area: wpm;
-    display: flex;
-    flex-direction: column;
 }
 
 .acc{
     grid-area: acc;
-    display: flex;
-    flex-direction: column;
 }
 
 .data{
     color: var(--active-color);
+}
+
+.graph{
+    width: 83%;
+    display: flex;
+}
+
+.char-status{
+    grid-column: 2/3;
+    height: 100%;
+    font-size: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    margin-left: 4vw;
+}
+
+.char-status span{
+    color: var(--active-color);
+    font-size: 2.5rem;
 }

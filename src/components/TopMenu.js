@@ -7,10 +7,10 @@ const TopMenu = ({currentWordIndex, countDown}) => {
     return ( 
         <div className="top-menu">
             <div className="counter">
-                {testMode==='words' ? (
-                    <p>{currentWordIndex} / {testWords}</p>
-                ):(
+                {testMode==='time' ? (
                     <p>{countDown}</p>
+                ):(
+                    <p>{currentWordIndex} / {testWords}</p>
                 )}
             </div>
             
@@ -20,18 +20,20 @@ const TopMenu = ({currentWordIndex, countDown}) => {
                 <button className={`option-button ${testMode === 'time' ? 'active' : ""}`} onClick={(e) => setTestMode('time')}>Time</button>
             </div>
             <div className="options-menu">
-                {testMode === 'words' ? (
-                    <>
-                        <button className={`option-button ${testWords === 20 ? 'active' : ""}`} onClick={() => setTestWords(20)}>20</button>
-                        <button className={`option-button ${testWords === 30 ? 'active' : ""}`} onClick={() => setTestWords(30)}>30</button>
-                        <button className={`option-button ${testWords === 50 ? 'active' : ""}`} onClick={() => setTestWords(50)}>50</button>
-                    </>
-                ) : (
+                {testMode === 'time' ? (
                     <>
                         <button className={`option-button ${testSeconds === 15 ? 'active' : ""}`} onClick={() => setTestSeconds(15)}>15</button>
                         <button className={`option-button ${testSeconds === 30 ? 'active' : ""}`} onClick={() => setTestSeconds(30)}>30</button>
                         <button className={`option-button ${testSeconds === 60 ? 'active' : ""}`} onClick={() => setTestSeconds(60)}>60</button>
                     </>
+                    
+                ) : (
+                    <>
+                        <button className={`option-button ${testWords === 20 ? 'active' : ""}`} onClick={() => setTestWords(20)}>20</button>
+                        <button className={`option-button ${testWords === 30 ? 'active' : ""}`} onClick={() => setTestWords(30)}>30</button>
+                        <button className={`option-button ${testWords === 50 ? 'active' : ""}`} onClick={() => setTestWords(50)}>50</button>
+                    </>
+                    
                 )}
             
             </div>

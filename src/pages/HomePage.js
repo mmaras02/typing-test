@@ -1,12 +1,12 @@
 import Header from "../components/Header";
-import TypingTest from "./TypingTest";
+import TypingTest from "../components/TypingTest";
 
 const HomePage = () => {
     return(
-    <div className="test-container">
-        <Header />
-        <TypingTest />
-     </div>);
+        <div className="test-container">
+            <Header />
+            <TypingTest />
+        </div>);
 }
  
 export default HomePage;

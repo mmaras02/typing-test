@@ -4,7 +4,7 @@ const TestModeContext = createContext();
 
 export const TestModeProvider = ({children}) => {
 
-    const [testMode, setTestMode] = useState('words');
+    const [testMode, setTestMode] = useState('time');
     const [testWords, setTestWords] = useState(20);
     const [testSeconds, setTestSeconds] = useState(15);
     
