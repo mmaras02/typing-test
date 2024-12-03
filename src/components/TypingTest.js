@@ -4,11 +4,10 @@ import { generate } from "random-words";
 import TopMenu from "./TopMenu";
 import { useTestMode } from "../context/TestModeContext";
 import Stats from "./Stats";
-import { useInView } from 'react-intersection-observer';
 
 const TypingTest = () => {
     
-    const {testMode, testWords, testSeconds, setTestSeconds} = useTestMode();
+    const {testMode,setTestWords, testWords, testSeconds, setTestSeconds} = useTestMode();
     const [text, setText] = useState("");
     const [loading, setLoading] = useState(true);
     const [userInput, setUserInput] = useState("");
@@ -32,36 +31,34 @@ const TypingTest = () => {
         inputRef?.current?.focus({ preventScroll: true });
       };
 
-    const handleScroll = () => {
-        const nextWord = wordRefs[currentWordIndex + 1];
-
-        if(nextWord && nextWord.offsetLeft === 0){
-            nextWord.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-    }
-
-
     useEffect(() => {
-        const words = generate(testWords);
+        let words;
+
+        if(testMode === 'time'){
+            words = generate(300);
+        }else{
+            words = generate(testWords);
+        }
+
         setText(words);
         setcharStatus(words.map(word => Array(word.length).fill(null)));
         setLoading(false);
         focusInput();
-    },[testWords]);
+
+    },[testWords, testMode]);
 
     const updateCharStatus = (wordIndex, charIndex, status) => {
         setcharStatus((prev) => {
-          const newCorrectWrongChar = [...prev];
-          newCorrectWrongChar[wordIndex] = [...newCorrectWrongChar[wordIndex]];
-          newCorrectWrongChar[wordIndex][charIndex] = status;
-          return newCorrectWrongChar;
+          const newCharStatus = [...prev];
+          newCharStatus[wordIndex] = [...newCharStatus[wordIndex]];
+          newCharStatus[wordIndex][charIndex] = status;
+          return newCharStatus;
         });
     };
 
     useEffect(() => {
         if (testStarted) {
             //updatePerformanceData();
-    
             let timer;
             if (testMode === 'time' && testSeconds > 0) {
                 timer = setInterval(() => {
@@ -71,13 +68,10 @@ const TypingTest = () => {
                 setIsFinished(true);
                 setTestStarted(false);
             }
-    
             return () => clearInterval(timer);
         }
-    }, [testStarted, currentWordIndex, testSeconds, testMode]);
+    }, [testStarted, testSeconds, testMode]);
 
-    
-    
 
     const onKeyDown = (e) => {
         e.preventDefault();
@@ -115,7 +109,7 @@ const TypingTest = () => {
                 setCurrentCharIndex((prevIndex) => prevIndex - 1);
                 setUserInput((prev) => prev.slice(0, -1));
 
-                if (charStatus[currentWordIndex][currentCharIndex - 1]  === "incorrect extra") {
+                if (charStatus[currentWordIndex][currentCharIndex - 1]  === 'incorrect extra') {
                     setText((prev) => {
                         const newText = [...prev];
                         newText[currentWordIndex] = newText[currentWordIndex].slice(0, -1);
@@ -136,7 +130,7 @@ const TypingTest = () => {
                 newText[currentWordIndex] += e.key; 
                 return newText;
             });
-            updateCharStatus(currentWordIndex, currentCharIndex, "incorrect extra");
+            updateCharStatus(currentWordIndex, currentCharIndex, 'incorrect extra');
             setUserInput((prev) => prev + e.key);
             setExtraChars(prev => prev + 1); 
             //setIncorrectChars((prev) => prev + 1);
@@ -146,14 +140,23 @@ const TypingTest = () => {
 
         //normal situations
         if(e.key === currentChar){
-            updateCharStatus(currentWordIndex, currentCharIndex, "correct");
+            updateCharStatus(currentWordIndex, currentCharIndex, 'correct');
             setCorrectChars(prev => prev + 1);
         }
         else{
-            updateCharStatus(currentWordIndex, currentCharIndex, "incorrect");
+            updateCharStatus(currentWordIndex, currentCharIndex, 'incorrect');
             setIncorrectChars(prev => prev + 1);
         }
         setCurrentCharIndex((prevIndex) => prevIndex + 1);
+    }
+
+
+    const handleScroll = () => {
+        const nextWord = wordRefs[currentWordIndex + 1];
+
+        if(nextWord && nextWord.offsetLeft === 0){
+            nextWord.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
     }
 
     const updatePerformanceData = () => {
@@ -161,10 +164,8 @@ const TypingTest = () => {
             ? ( initialTime - testSeconds)
             : (Date.now() - initialTime) / 1000;
         
-        console.log("elapsedTimeInSeconds", elapsedTimeInSeconds);
-        console.log("wpm", calculateWPM());
         setPerformanceData(prev => [
-            ...prev, {time: elapsedTimeInSeconds, wpm: calculateWPM(), accuracy: calculateAccuracy()},
+            ...prev, {time: Math.round(elapsedTimeInSeconds), wpm: calculateWPM(), accuracy: calculateAccuracy()},
         ]);
     };
 
@@ -177,16 +178,11 @@ const TypingTest = () => {
             ? ( initialTime - testSeconds)
             : (Date.now() - initialTime) / 1000;
 
-            console.log("elapsedTimeInSeconds1", elapsedTimeInSeconds);
-
         const time = 60 / elapsedTimeInSeconds;
-        console.log("time", time);
         
         if(testMode === 'time'){
-            console.log("correct chars", (correctChars / 5) * time);
             return Math.round((correctChars / 5) * time);
         }else{
-            console.log("correct chars", (correctWords * time));
             return Math.round(correctWords * time);
         }
     };
