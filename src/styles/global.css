@@ -181,10 +181,14 @@
 
 .data{
     color: var(--active-color);
+    font-size: 3rem;
+    font-weight: 700;
+    font-family: 'Azeret Mono', monospace;
 }
 
 .graph{
-    width: 83%;
+    margin-top: 5vh;
+    width: 80%;
     display: flex;
 }
 

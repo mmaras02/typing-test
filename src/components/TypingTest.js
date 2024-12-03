@@ -7,7 +7,7 @@ import Stats from "./Stats";
 
 const TypingTest = () => {
     
-    const {testMode,setTestWords, testWords, testSeconds, setTestSeconds} = useTestMode();
+    const {testMode, testWords, testSeconds, setTestSeconds} = useTestMode();
     const [text, setText] = useState("");
     const [loading, setLoading] = useState(true);
     const [userInput, setUserInput] = useState("");
@@ -19,7 +19,7 @@ const TypingTest = () => {
     const [incorrectChars, setIncorrectChars] = useState(0);
     const [missedChars, setMissedChars] = useState(0);
     const [extraChars, setExtraChars] = useState(0);
-    const [isFinished, setIsFinished] = useState(false);
+    const [testEnd, setTestEnd] = useState(false);
     const [testStarted, setTestStarted] = useState(false);
     const [initialTime,setInitialTime] = useState(null);
     const [performanceData, setPerformanceData] = useState([]);
@@ -34,12 +34,14 @@ const TypingTest = () => {
     useEffect(() => {
         let words;
 
+        console.log("testMode", testMode);
         if(testMode === 'time'){
             words = generate(300);
         }else{
             words = generate(testWords);
         }
 
+        console.log("hey",words);
         setText(words);
         setcharStatus(words.map(word => Array(word.length).fill(null)));
         setLoading(false);
@@ -65,18 +67,47 @@ const TypingTest = () => {
                     setTestSeconds((prev) => prev - 1);
                 }, 1000);
             } else if (testMode === 'time' && testSeconds === 0) {
-                setIsFinished(true);
+                setTestEnd(true);
                 setTestStarted(false);
             }
             return () => clearInterval(timer);
         }
     }, [testStarted, testSeconds, testMode]);
 
+    const resetTest = () => {
+        setLoading(true);
+        clearInterval();
+        setCurrentCharIndex(0);
+        setCurrentWordIndex(0);
+        setTestStarted(false);
+        setTestEnd(false);
+
+        let words;
+        if(testMode === 'time'){
+            words = generate(300);
+            setTestSeconds(testSeconds);
+        }else{
+            words = generate(testWords)
+        }
+        setText(words);
+        setcharStatus(words.map((word) => Array(word.length).fill(null)));
+        setPerformanceData([]);
+        setCorrectChars(0);
+        setCorrectWords(0);
+        setExtraChars(0);
+        setIncorrectChars(0);
+        setMissedChars(0);
+        focusInput();
+
+    }
+
 
     const onKeyDown = (e) => {
         e.preventDefault();
 
-        if(!testStarted){
+        if (testEnd) return;
+
+        if(!testStarted && !testEnd){
             setTestStarted(true);
             setInitialTime(testMode === 'words' ? Date.now() : testSeconds);
         }
@@ -89,7 +120,7 @@ const TypingTest = () => {
 
             console.log("correct words", correctWords);
             if(currentWordIndex + 1 === testWords)
-                setIsFinished(true);
+                setTestEnd(true);
 
             if(currentWord.split('').every((char, index) => charStatus[currentWordIndex][index] === 'correct')){
                 setCorrectWords(prev => prev + 1);
@@ -191,7 +222,7 @@ const TypingTest = () => {
         <>
             
             <div className="center-box">
-                {isFinished ? (
+                {testEnd ? (
                     <Stats wpm={calculateWPM()}
                                 accuracy={calculateAccuracy()}
                                 performanceData={performanceData}
@@ -199,6 +230,7 @@ const TypingTest = () => {
                                 incorrectChars={incorrectChars}
                                 missedChars={missedChars}
                                 extraChars={extraChars}
+                                resetTest={resetTest}
                                 />
                 ) : (
                     <>

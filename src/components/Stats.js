@@ -1,18 +1,18 @@
 import React from 'react';
 import Graph from './Graph';
 
-const Stats = ({wpm, accuracy, performanceData, correctChars, incorrectChars, missedChars, extraChars }) => {
+const Stats = ({wpm, accuracy, performanceData, correctChars, incorrectChars, missedChars, extraChars, resetTest }) => {
 
   return (
     <div className="results-content">
         <div className="stats">
             <div className='wpm'>
                 <p>wpm</p> 
-                <p className='data'>{wpm}</p>
+                <span className='data'>{wpm}</span>
             </div>
             <div className='acc'>
                 <p>acc</p> 
-                <p className='data'>{accuracy} %</p>
+                <span className='data'>{accuracy}%</span>
             </div>
         </div>
         <div className="graph">
@@ -20,7 +20,8 @@ const Stats = ({wpm, accuracy, performanceData, correctChars, incorrectChars, mi
         </div>
         <div className="char-status">
           <p>characters</p>
-          <span>{correctChars}/{incorrectChars}/{missedChars}/{extraChars}</span>
+          <span className='data'>{correctChars}/{incorrectChars}/{missedChars}/{extraChars}</span>
+          {/*<button onClick={resetTest}>reset Test</button>*/}
         </div>
     </div>
   );
