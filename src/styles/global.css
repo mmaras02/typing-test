@@ -91,12 +91,12 @@
     display: block;
     position: relative;
 
-    /*margin-left: unset;
-    overflow: hidden;*/
+    margin-left: unset;
+    overflow: hidden;
     transition: 0.25s;
+    scroll-behavior: smooth;
 
 }
-
 
 .words{
     width: 100%;
@@ -104,6 +104,9 @@
     flex-wrap: wrap;
     gap: 18px;
     padding-top: 7px;
+
+    transform: translateY(0); /* Initial position for scrolling effect */
+    transition: transform 0.3s ease;
 }
 
 .word{
@@ -162,17 +165,14 @@
         "wpm" 
         "acc";
     font-size: 36px;
+}
+
+.wpm, .acc{
+    grid-area: wpm;
     display: flex;
     flex-direction: column;
-    left: 0;
-}
-
-.stats p{
-    left: 0;
-}
-
-.wpm{
-    grid-area: wpm;
+    align-items: start;
+    margin-left: 2vw;
 }
 
 .acc{

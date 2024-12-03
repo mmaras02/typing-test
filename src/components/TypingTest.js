@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, createRef } from "react";
 import "../styles/global.css";
 import { generate } from "random-words";
 import TopMenu from "./TopMenu";
 import { useTestMode } from "../context/TestModeContext";
 import Stats from "./Stats";
-
+import { useInView } from 'react-intersection-observer';
 
 const TypingTest = () => {
     
@@ -14,7 +14,7 @@ const TypingTest = () => {
     const [userInput, setUserInput] = useState("");
     const [currentWordIndex, setCurrentWordIndex] = useState(0);
     const [currentCharIndex, setCurrentCharIndex] = useState(0);
-    const [correctWrongChars, setCorrectWrongChars] = useState([]);
+    const [charStatus, setcharStatus] = useState([]);
     const [correctChars, setCorrectChars] = useState(0);
     const [correctWords, setCorrectWords] = useState(0);
     const [incorrectChars, setIncorrectChars] = useState(0);
@@ -26,21 +26,31 @@ const TypingTest = () => {
     const [performanceData, setPerformanceData] = useState([]);
 
     const inputRef = useRef(null);
+    const wordRefs = useRef([]);
 
     const focusInput = () => {
-        inputRef?.current.focus();
+        inputRef?.current?.focus({ preventScroll: true });
       };
+
+    const handleScroll = () => {
+        const nextWord = wordRefs[currentWordIndex + 1];
+
+        if(nextWord && nextWord.offsetLeft === 0){
+            nextWord.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    }
+
 
     useEffect(() => {
         const words = generate(testWords);
         setText(words);
-        setCorrectWrongChars(words.map(word => Array(word.length).fill(null)));
+        setcharStatus(words.map(word => Array(word.length).fill(null)));
         setLoading(false);
         focusInput();
     },[testWords]);
 
     const updateCharStatus = (wordIndex, charIndex, status) => {
-        setCorrectWrongChars((prev) => {
+        setcharStatus((prev) => {
           const newCorrectWrongChar = [...prev];
           newCorrectWrongChar[wordIndex] = [...newCorrectWrongChar[wordIndex]];
           newCorrectWrongChar[wordIndex][charIndex] = status;
@@ -49,22 +59,29 @@ const TypingTest = () => {
     };
 
     useEffect(() => {
-        let timer;
-        if (testMode === 'time' && testStarted &&  testSeconds > 0) {
-            timer = setInterval(() => {
-                setTestSeconds((prev) => prev - 1);
-                //updatePerformanceData();
-            }, 1000);
-        } else if (testMode==='time' && testSeconds === 0) {
-            setIsFinished(true);
-            setTestStarted(false);
-        }
+        if (testStarted) {
+            //updatePerformanceData();
     
-        return () => clearInterval(timer);
-    }, [testStarted, testSeconds],testMode);
+            let timer;
+            if (testMode === 'time' && testSeconds > 0) {
+                timer = setInterval(() => {
+                    setTestSeconds((prev) => prev - 1);
+                }, 1000);
+            } else if (testMode === 'time' && testSeconds === 0) {
+                setIsFinished(true);
+                setTestStarted(false);
+            }
+    
+            return () => clearInterval(timer);
+        }
+    }, [testStarted, currentWordIndex, testSeconds, testMode]);
 
+    
+    
 
     const onKeyDown = (e) => {
+        e.preventDefault();
+
         if(!testStarted){
             setTestStarted(true);
             setInitialTime(testMode === 'words' ? Date.now() : testSeconds);
@@ -76,10 +93,11 @@ const TypingTest = () => {
         //space handling
         if(e.key === " " || e.key === "Enter"){
 
+            console.log("correct words", correctWords);
             if(currentWordIndex + 1 === testWords)
                 setIsFinished(true);
 
-            if(userInput.trim() === currentWord){
+            if(currentWord.split('').every((char, index) => charStatus[currentWordIndex][index] === 'correct')){
                 setCorrectWords(prev => prev + 1);
             }
             setCurrentWordIndex((prevIndex) => prevIndex + 1);
@@ -87,6 +105,7 @@ const TypingTest = () => {
             setUserInput("");
 
             updatePerformanceData();
+            handleScroll();
             return;
         }
 
@@ -96,7 +115,7 @@ const TypingTest = () => {
                 setCurrentCharIndex((prevIndex) => prevIndex - 1);
                 setUserInput((prev) => prev.slice(0, -1));
 
-                if (correctWrongChars[currentWordIndex][currentCharIndex - 1]  === "incorrect extra") {
+                if (charStatus[currentWordIndex][currentCharIndex - 1]  === "incorrect extra") {
                     setText((prev) => {
                         const newText = [...prev];
                         newText[currentWordIndex] = newText[currentWordIndex].slice(0, -1);
@@ -112,7 +131,6 @@ const TypingTest = () => {
     
         // handling extra letters
         if (currentCharIndex >= currentWord.length) {
-            
             setText((prev) => {
                 const newText = [...prev];
                 newText[currentWordIndex] += e.key; 
@@ -143,6 +161,8 @@ const TypingTest = () => {
             ? ( initialTime - testSeconds)
             : (Date.now() - initialTime) / 1000;
         
+        console.log("elapsedTimeInSeconds", elapsedTimeInSeconds);
+        console.log("wpm", calculateWPM());
         setPerformanceData(prev => [
             ...prev, {time: elapsedTimeInSeconds, wpm: calculateWPM(), accuracy: calculateAccuracy()},
         ]);
@@ -157,10 +177,18 @@ const TypingTest = () => {
             ? ( initialTime - testSeconds)
             : (Date.now() - initialTime) / 1000;
 
+            console.log("elapsedTimeInSeconds1", elapsedTimeInSeconds);
+
         const time = 60 / elapsedTimeInSeconds;
-        return testMode === 'time'
-            ? Math.round((correctChars / 5) * time)
-            : Math.round(correctWords * time);
+        console.log("time", time);
+        
+        if(testMode === 'time'){
+            console.log("correct chars", (correctChars / 5) * time);
+            return Math.round((correctChars / 5) * time);
+        }else{
+            console.log("correct chars", (correctWords * time));
+            return Math.round(correctWords * time);
+        }
     };
 
     return ( 
@@ -178,7 +206,7 @@ const TypingTest = () => {
                                 />
                 ) : (
                     <>
-                    <TopMenu currentWordIndex={currentWordIndex} countDown={testSeconds} />
+                    <TopMenu currentWordIndex={currentWordIndex} countDown={testSeconds}  />
 
                     <div className="text-box" onClick={focusInput}>
                         {loading ? (
@@ -186,16 +214,18 @@ const TypingTest = () => {
                         ) : (
                             <div className="words">
                                 {text.map((word, wordIndex) => (
-                                    <div className="word" key={wordIndex}>
+                                    <div className="word" key={wordIndex} ref={el => wordRefs[wordIndex] = el}>
                                         {word.split('').map((char, charIndex) => (
                                             
-                                            <span key={`${wordIndex}-${charIndex}`} className={`char ${wordIndex === currentWordIndex && charIndex === currentCharIndex ? "active" : ""} ${correctWrongChars[wordIndex][charIndex]}`}>{char}</span>
+                                            <span key={`${wordIndex}-${charIndex}`} 
+                                                  className={`char ${wordIndex === currentWordIndex && charIndex === currentCharIndex ? "active" : ""} ${charStatus[wordIndex][charIndex]}`}>{char}
+                                            </span>
                                         ))}
                                 </div>
                             ))}
                             </div>
                         )}
-                        <textarea type="text"
+                        <input type="text"
                                 className="hidden-input"
                                 ref={inputRef} 
                                 value={userInput}

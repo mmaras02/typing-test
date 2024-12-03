@@ -33,12 +33,12 @@ const Graph = ({ performanceData }) => {
         borderColor: "rgb(111, 59, 231)",
         borderWidth: 4,
       },
-      {
+      /*{
         label: "Accuracy (%)",
         data: performanceData.map((data) => data.accuracy),
         borderColor: "rgb(100, 94, 94)",
         borderWidth: 4,
-      },
+      },*/
     ],
   };
 
